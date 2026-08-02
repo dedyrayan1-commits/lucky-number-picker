@@ -1,0 +1,1 @@
+export const dailyNumbers = [7, 12, 18, 29, 36, 41];
