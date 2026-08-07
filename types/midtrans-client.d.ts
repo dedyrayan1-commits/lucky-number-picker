@@ -1,17 +1,30 @@
-declare module "midtrans-client";
+declare module "midtrans-client" {
+  export class Snap {
+    constructor(options: {
+      isProduction: boolean;
+      serverKey: string;
+      clientKey?: string;
+    });
+
+    createTransaction(params: unknown): Promise<{
+      token: string;
+      redirect_url: string;
+    }>;
+  }
+}
 
 declare global {
   interface Window {
     snap: {
-      pay: (
+      pay(
         token: string,
         options?: {
-          onSuccess?: (result: unknown) => void;
-          onPending?: (result: unknown) => void;
-          onError?: (result: unknown) => void;
-          onClose?: () => void;
+          onSuccess?(result: unknown): void;
+          onPending?(result: unknown): void;
+          onError?(result: unknown): void;
+          onClose?(): void;
         }
-      ) => void;
+      ): void;
     };
   }
 }
