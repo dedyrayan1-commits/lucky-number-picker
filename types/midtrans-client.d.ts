@@ -11,6 +11,12 @@ declare module "midtrans-client" {
       redirect_url: string;
     }>;
   }
+
+  const midtransClient: {
+    Snap: typeof Snap;
+  };
+
+  export default midtransClient;
 }
 
 declare global {
