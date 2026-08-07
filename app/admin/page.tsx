@@ -1,9 +1,10 @@
 export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
-import AdminMarketCard from "@/components/AdminMarketCard";
-import LogoutButton from "@/components/LogoutButton";
 import { createClient } from "@/lib/supabase/server";
+
+import AdminMarketCard from "@/components/AdminMarketCard";
+import MemberManagementCard from "@/components/MemberManagementCard";
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -16,53 +17,87 @@ export default async function AdminPage() {
     redirect("/login");
   }
 
-  const { data, error } = await supabase
-    .from("markets")
+  const { data: profile } = await supabase
+    .from("profiles")
     .select("*")
-    .order("id");
+    .eq("id", user.id)
+    .maybeSingle();
 
-  if (error) {
+  if (!profile) {
     return (
       <main className="min-h-screen bg-slate-950 p-10 text-white">
-        <pre>{JSON.stringify(error, null, 2)}</pre>
+        <h1 className="text-3xl font-bold">
+          Profile tidak ditemukan
+        </h1>
       </main>
     );
   }
 
+  if (profile.role !== "admin") {
+    redirect("/dashboard");
+  }
+
+  const { data: markets } = await supabase
+    .from("markets")
+    .select("*")
+    .order("id");
+
+  const { data: members } = await supabase
+    .from("profiles")
+    .select("*")
+    .order("created_at");
+
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
-      <div className="mx-auto max-w-7xl px-6 py-16">
+    <main className="min-h-screen bg-slate-950 p-10 text-white">
 
-        <div className="flex items-center justify-between">
+      <h1 className="text-4xl font-bold">
+        Admin Panel
+      </h1>
 
-  <div>
-    <h1 className="text-4xl font-bold">
-      Admin Dashboard
-    </h1>
+      <p className="mt-2 text-slate-400">
+        Selamat datang, {profile.full_name}
+      </p>
 
-    <p className="mt-2 text-gray-400">
-      Manage daily predictions and official results.
-    </p>
-  </div>
+      <section className="mt-12">
+        <h2 className="mb-6 text-2xl font-bold">
+          Market Management
+        </h2>
 
-  <LogoutButton />
-
-</div>
-
-        <div className="mt-12 grid gap-6 md:grid-cols-2">
-          {data?.map((market) => (
+        <div className="grid gap-6 lg:grid-cols-2">
+          {markets?.map((market) => (
             <AdminMarketCard
-              key={market.id}
-              marketId={market.id}
-              marketName={market.name}
-              prediction={market.prediction}
-              officialResult={market.official_result}
-              status={market.status}
+  key={market.id}
+  marketId={market.id}
+  marketName={market.name}
+  prediction={market.prediction}
+  officialResult={market.official_result}
+  drawNumber={market.draw_number}
+  drawDate={market.draw_date}
+  countryCode={market.country_code}
+  status={market.status}
+/>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-16">
+        <h2 className="mb-6 text-2xl font-bold">
+          Member Management
+        </h2>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          {members?.map((member) => (
+            <MemberManagementCard
+              key={member.id}
+              id={member.id}
+              fullName={member.full_name}
+              role={member.role}
+              membership={member.membership}
             />
           ))}
         </div>
+      </section>
 
-      </div>
     </main>
   );
 }

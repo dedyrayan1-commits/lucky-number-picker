@@ -5,6 +5,7 @@ import ComparisonTable from "@/components/ComparisonTable";
 import TestimonialCard from "@/components/TestimonialCard";
 import FaqItem from "@/components/FaqItem";
 import Footer from "@/components/Footer";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -27,15 +28,19 @@ export default function Home() {
 </p>
 
 <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-
-  <button className="rounded-xl bg-emerald-500 px-8 py-4 font-semibold text-white shadow-lg transition duration-300 hover:-translate-y-1 hover:bg-emerald-600 hover:shadow-emerald-500/30">
+  <Link
+    href="/official-result"
+    className="rounded-xl bg-emerald-500 px-8 py-4 text-center font-semibold text-white shadow-lg transition duration-300 hover:-translate-y-1 hover:bg-emerald-600 hover:shadow-emerald-500/30"
+  >
     📊 Lihat Hasil Resmi
-  </button>
+  </Link>
 
-  <button className="rounded-xl border border-amber-400 px-8 py-4 font-semibold text-amber-300 shadow-lg transition duration-300 hover:-translate-y-1 hover:bg-amber-400 hover:text-slate-950 hover:shadow-amber-400/40">
+  <Link
+    href="/membership"
+    className="rounded-xl border border-amber-400 px-8 py-4 text-center font-semibold text-amber-300 shadow-lg transition duration-300 hover:-translate-y-1 hover:bg-amber-400 hover:text-slate-950 hover:shadow-amber-400/40"
+  >
     👑 Jadi Member Premium
-  </button>
-
+  </Link>
 </div>
 
       </section>

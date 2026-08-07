@@ -22,6 +22,7 @@ export default async function OfficialResultSection() {
     <section className="mx-auto max-w-6xl px-6 py-20 text-white">
 
       <div className="text-center">
+
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-400">
           OFFICIAL RESULT
         </p>
@@ -33,41 +34,49 @@ export default async function OfficialResultSection() {
         <p className="mt-6 text-lg text-slate-300">
           Seluruh hasil resmi diperbarui setiap hari.
         </p>
+
       </div>
 
       <div className="mt-14 grid gap-6 md:grid-cols-2">
 
         {markets?.map((market) => (
+
           <div
             key={market.id}
             className="rounded-2xl border border-slate-800 bg-slate-900 p-6"
           >
+
             <h3 className="text-2xl font-bold">
               {market.name}
             </h3>
 
             <div className="mt-6 flex gap-2">
-              {market.official_result.map((number: number) => (
-                <div
-                  key={number}
-                  className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-500 font-bold text-white"
-                >
-                  {number}
-                </div>
-              ))}
+
+              {(market.official_result ?? "")
+                .split("")
+                .map((number: string, index: number) => (
+
+                  <div
+                    key={index}
+                    className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-500 font-bold text-white"
+                  >
+                    {number}
+                  </div>
+
+                ))}
+
             </div>
 
             <div className="mt-6">
 
               <span className="rounded-full bg-slate-800 px-4 py-2 text-sm">
-
                 {market.status}
-
               </span>
 
             </div>
 
           </div>
+
         ))}
 
       </div>

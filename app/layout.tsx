@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Script from "next/script";
 
 import Navbar from "@/components/Navbar";
 import Container from "@/components/Container";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -75,11 +77,29 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-slate-950">
+
+        {/*
+<Script
+  src="https://app.sandbox.midtrans.com/snap/snap.js"
+  data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+  strategy="beforeInteractive"
+/>
+*/}
+
         <Navbar />
 
         <Container>
           {children}
         </Container>
+
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton
+          duration={2500}
+          theme="dark"
+        />
+
       </body>
     </html>
   );

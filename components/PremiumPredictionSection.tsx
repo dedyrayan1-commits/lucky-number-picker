@@ -1,9 +1,9 @@
+import CheckoutButton from "./CheckoutButton";
+
 export default function PremiumPredictionSection() {
   return (
-    <section className="mx-auto max-w-6xl px-6 py-20 text-white">
-
+    <section>
       <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-br from-slate-900 to-slate-800 p-10 text-center">
-
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-amber-400">
           PREMIUM PREDICTION
         </p>
@@ -17,7 +17,6 @@ export default function PremiumPredictionSection() {
         </p>
 
         <div className="mt-10 flex justify-center gap-3">
-
           {Array.from({ length: 6 }).map((_, index) => (
             <div
               key={index}
@@ -26,21 +25,16 @@ export default function PremiumPredictionSection() {
               8
             </div>
           ))}
-
         </div>
 
-        <p className="mt-8 text-amber-300 font-semibold">
+        <p className="mt-8 font-semibold text-amber-300">
           🔒 Premium Member Only
         </p>
 
-        <button
-          className="mt-8 rounded-xl bg-amber-500 px-8 py-4 font-semibold text-slate-950 transition hover:bg-amber-400"
-        >
-          👑 Upgrade Menjadi Member Premium
-        </button>
-
+        <div className="mt-8 flex justify-center">
+          <CheckoutButton packageId="premium_regular" />
+        </div>
       </div>
-
     </section>
   );
 }
