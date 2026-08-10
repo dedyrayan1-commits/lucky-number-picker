@@ -7,6 +7,7 @@ import AdminMarketCard from "@/components/AdminMarketCard";
 import MemberManagementCard from "@/components/MemberManagementCard";
 import AdminAdCard from "@/components/AdminAdCard";
 import AdminAdCreateForm from "@/components/AdminAdCreateForm";
+import LogoutButton from "@/components/LogoutButton";
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -56,13 +57,19 @@ export default async function AdminPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 p-10 text-white">
-      <h1 className="text-4xl font-bold">
-        Admin Panel
-      </h1>
+      <div className="flex items-start justify-between gap-6">
+        <div>
+          <h1 className="text-4xl font-bold">
+            Admin Panel
+          </h1>
 
-      <p className="mt-2 text-slate-400">
-        Selamat datang, {profile.full_name}
-      </p>
+          <p className="mt-2 text-slate-400">
+            Selamat datang, {profile.full_name}
+          </p>
+        </div>
+
+        <LogoutButton />
+      </div>
 
       <section className="mt-12">
         <h2 className="mb-6 text-2xl font-bold">
