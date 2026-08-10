@@ -26,10 +26,12 @@ export default function AdminMarketCard({
   countryCode,
   status,
 }: AdminMarketCardProps) {
-
   const supabase = createClient();
 
-  const [predictionValue, setPredictionValue] = useState(prediction ?? "");
+  const [predictionValue, setPredictionValue] = useState(
+    prediction ?? ""
+  );
+
   const [officialResultValue, setOfficialResultValue] = useState(
     officialResult ?? ""
   );
@@ -38,89 +40,66 @@ export default function AdminMarketCard({
   const [loading, setLoading] = useState(false);
 
   async function handleSave() {
-  if (predictionValue.length !== 6) {
-    toast.error("Prediction harus terdiri dari tepat 6 digit.");
-    return;
-  }
+    if (predictionValue.length !== 6) {
+      toast.error(
+        "Prediction harus terdiri dari tepat 6 digit."
+      );
+      return;
+    }
 
-  if (
-    officialResultValue &&
-    officialResultValue.length !== 4
-  ) {
-    toast.error("Official Result harus terdiri dari tepat 4 digit.");
-    return;
-  }
+    if (
+      officialResultValue &&
+      officialResultValue.length !== 4
+    ) {
+      toast.error(
+        "Official Result harus terdiri dari tepat 4 digit."
+      );
+      return;
+    }
 
-  setLoading(true);
+    setLoading(true);
 
-  // Update Market
-  const { error: updateError } = await supabase
-    .from("markets")
-    .update({
-      prediction: predictionValue,
-      official_result: officialResultValue,
-      status: currentStatus,
-    })
-    .eq("id", marketId);
+    const { error } = await supabase
+      .from("markets")
+      .update({
+        prediction: predictionValue,
+        official_result: officialResultValue,
+        status: currentStatus,
+      })
+      .eq("id", marketId);
 
-  if (updateError) {
     setLoading(false);
 
-    console.error(updateError);
+    if (error) {
+      console.error(error);
 
-    toast.error("Gagal menyimpan data.", {
-      description: "Silakan coba beberapa saat lagi.",
+      toast.error("Gagal menyimpan data.", {
+        description: "Silakan coba beberapa saat lagi.",
+      });
+
+      return;
+    }
+
+    toast.success("Data berhasil disimpan.", {
+      description: `${marketName} berhasil diperbarui.`,
     });
-
-    return;
   }
-
-  // Simpan History
-  const { error: historyError } = await supabase
-    .from("prediction_history")
-    .insert({
-      market_id: marketId,
-      name: marketName,
-      country_code: countryCode,
-      prediction: predictionValue,
-      official_result: officialResultValue,
-      draw_number: drawNumber,
-      draw_date: drawDate,
-    });
-
-  setLoading(false);
-
-  if (historyError) {
-    console.error(historyError);
-
-    toast.error("Market berhasil diperbarui, tetapi gagal menyimpan history.", {
-      description: "Silakan periksa Prediction History.",
-    });
-
-    return;
-  }
-
-  toast.success("Data berhasil disimpan.", {
-    description: `${marketName} berhasil diperbarui.`,
-  });
-}
 
   return (
     <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 text-white">
-
       <h2 className="text-2xl font-bold">
         {marketName}
       </h2>
 
       {/* Prediction */}
       <div className="mt-6">
-
         <label className="mb-2 block text-sm text-slate-400">
           Prediction (6 Digit)
         </label>
 
         <input
           type="text"
+          inputMode="numeric"
           maxLength={6}
           value={predictionValue}
           onChange={(e) =>
@@ -130,18 +109,17 @@ export default function AdminMarketCard({
           }
           className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-center text-2xl font-bold tracking-[0.35em] outline-none transition focus:border-emerald-500"
         />
-
       </div>
 
       {/* Official Result */}
       <div className="mt-6">
-
         <label className="mb-2 block text-sm text-slate-400">
           Official Result (4 Digit)
         </label>
 
         <input
           type="text"
+          inputMode="numeric"
           maxLength={4}
           value={officialResultValue}
           onChange={(e) =>
@@ -151,12 +129,43 @@ export default function AdminMarketCard({
           }
           className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-center text-2xl font-bold tracking-[0.35em] outline-none transition focus:border-cyan-500"
         />
+      </div>
 
+      {/* Market Information */}
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <div className="rounded-xl bg-slate-800 p-4">
+          <p className="text-sm text-slate-400">
+            Draw Number
+          </p>
+
+          <p className="mt-1 font-semibold">
+            {drawNumber || "-"}
+          </p>
+        </div>
+
+        <div className="rounded-xl bg-slate-800 p-4">
+          <p className="text-sm text-slate-400">
+            Draw Date
+          </p>
+
+          <p className="mt-1 font-semibold">
+            {drawDate || "-"}
+          </p>
+        </div>
+
+        <div className="rounded-xl bg-slate-800 p-4">
+          <p className="text-sm text-slate-400">
+            Country
+          </p>
+
+          <p className="mt-1 font-semibold">
+            {countryCode || "-"}
+          </p>
+        </div>
       </div>
 
       {/* Status */}
       <div className="mt-6">
-
         <label className="mb-2 block text-sm text-slate-400">
           Status
         </label>
@@ -168,11 +177,18 @@ export default function AdminMarketCard({
           }
           className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 outline-none transition focus:border-emerald-500"
         >
-          <option value="Draft">Draft</option>
-          <option value="Published">Published</option>
-          <option value="Finished">Finished</option>
-        </select>
+          <option value="Draft">
+            Draft
+          </option>
 
+          <option value="Published">
+            Published
+          </option>
+
+          <option value="Finished">
+            Finished
+          </option>
+        </select>
       </div>
 
       <button
@@ -189,7 +205,6 @@ export default function AdminMarketCard({
           "Simpan"
         )}
       </button>
-
     </div>
   );
 }

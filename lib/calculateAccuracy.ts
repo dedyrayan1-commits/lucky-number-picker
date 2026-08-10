@@ -1,15 +1,17 @@
 export type AccuracyResult = {
-  matchedNumbers: number[];
+  matchedNumbers: string[];
   totalMatchedNumbers: number;
 };
 
 export function calculateAccuracy(
-  prediction: number[],
-  officialResult: number[]
+  prediction: string,
+  officialResult: string
 ): AccuracyResult {
-  const matchedNumbers = prediction.filter((number) =>
-    officialResult.includes(number)
-  );
+  const matchedNumbers = prediction
+    .split("")
+    .filter((number) =>
+      officialResult.includes(number)
+    );
 
   return {
     matchedNumbers,

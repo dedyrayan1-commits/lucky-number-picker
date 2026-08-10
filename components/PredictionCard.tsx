@@ -1,8 +1,6 @@
 import NumberCircle from "./NumberCircle";
-import MarketHeader from "./MarketHeader";
 
 import { Prediction } from "@/types/prediction";
-import { calculateAccuracy } from "@/lib/calculateAccuracy";
 
 type PredictionCardProps = {
   prediction: Prediction;
@@ -14,59 +12,80 @@ export default function PredictionCard({
   const hasOfficialResult =
     prediction.official_result.length > 0;
 
-  const accuracy = calculateAccuracy(
-    prediction.prediction,
-    prediction.official_result
-  );
+  const matchedNumbers = prediction.prediction
+    .split("")
+    .filter((number) =>
+      prediction.official_result.includes(number)
+    );
 
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-md">
-      <MarketHeader
-        countryCode={prediction.country_code}
-        name={prediction.name}
-        drawNumber={prediction.draw_number}
-        drawDate={prediction.draw_date}
-      />
+    <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 text-white">
 
-      <hr className="my-6" />
+      <div>
+        <h2 className="text-2xl font-bold">
+          {prediction.name}
+        </h2>
 
+        <div className="mt-2 flex flex-wrap gap-3 text-sm text-slate-400">
+          <span>
+            Draw Number: {prediction.draw_number || "-"}
+          </span>
+
+          <span>
+            Draw Date: {prediction.draw_date || "-"}
+          </span>
+
+          <span>
+            Status: {prediction.status}
+          </span>
+        </div>
+      </div>
+
+      <hr className="my-6 border-slate-800" />
+
+      {/* Prediction */}
       <h3 className="mb-3 font-semibold">
         Prediction
       </h3>
 
       <div className="flex flex-wrap gap-3">
-        {prediction.prediction.map((number, index) => (
-          <NumberCircle
-            key={`prediction-${index}`}
-            value={number}
-            variant={
-              accuracy.matchedNumbers.includes(number)
-                ? "matched"
-                : "default"
-            }
-          />
-        ))}
+        {prediction.prediction
+          .split("")
+          .map((number, index) => (
+            <NumberCircle
+              key={`prediction-${index}`}
+              value={Number(number)}
+              variant={
+                matchedNumbers.includes(number)
+                  ? "matched"
+                  : "default"
+              }
+            />
+          ))}
       </div>
 
-      <hr className="my-6" />
+      <hr className="my-6 border-slate-800" />
 
+      {/* Official Result */}
       <h3 className="mb-3 font-semibold">
         Official Result
       </h3>
 
       {hasOfficialResult ? (
         <div className="flex flex-wrap gap-3">
-          {prediction.official_result.map((number, index) => (
-            <NumberCircle
-              key={`official-${index}`}
-              value={number}
-              variant={
-                accuracy.matchedNumbers.includes(number)
-                  ? "matched"
-                  : "default"
-              }
-            />
-          ))}
+          {prediction.official_result
+            .split("")
+            .map((number, index) => (
+              <NumberCircle
+                key={`official-${index}`}
+                value={Number(number)}
+                variant={
+                  matchedNumbers.includes(number)
+                    ? "matched"
+                    : "default"
+                }
+              />
+            ))}
         </div>
       ) : (
         <p className="text-sm italic text-gray-400">
@@ -74,22 +93,24 @@ export default function PredictionCard({
         </p>
       )}
 
-      <hr className="my-6" />
+      <hr className="my-6 border-slate-800" />
 
+      {/* Accuracy */}
       <h3 className="mb-3 font-semibold">
         Accuracy
       </h3>
 
       {hasOfficialResult ? (
         <p className="font-semibold text-emerald-600">
-          🎯 {accuracy.totalMatchedNumbers} / {prediction.prediction.length} Numbers Matched
-          Matched
+          🎯 {matchedNumbers.length} /{" "}
+          {prediction.prediction.length} Numbers Matched
         </p>
       ) : (
         <p className="text-sm italic text-gray-400">
           Pending
         </p>
       )}
+
     </div>
   );
 }

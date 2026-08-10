@@ -5,43 +5,43 @@ export type Membership =
   | "vip";
 
 export function isFreeMember(
-  membership: Membership | string | null | undefined
+  membership: string | null | undefined
 ) {
   return membership === "free";
 }
 
 export function isPremiumRegular(
-  membership: Membership | string | null | undefined
+  membership: string | null | undefined
 ) {
   return membership === "premium_regular";
 }
 
 export function isPremiumToto(
-  membership: Membership | string | null | undefined
+  membership: string | null | undefined
 ) {
   return membership === "premium_toto";
 }
 
 export function isVip(
-  membership: Membership | string | null | undefined
+  membership: string | null | undefined
 ) {
   return membership === "vip";
 }
 
 export function canSeeRegularPrediction(
-  membership: Membership | string | null | undefined
+  membership: string | null | undefined
 ) {
   return (
-    isPremiumRegular(membership) ||
-    isVip(membership)
+    membership === "premium_regular" ||
+    membership === "vip"
   );
 }
 
 export function canSeeTotoPrediction(
-  membership: Membership | string | null | undefined
+  membership: string | null | undefined
 ) {
   return (
-    isPremiumToto(membership) ||
-    isVip(membership)
+    membership === "premium_toto" ||
+    membership === "vip"
   );
 }

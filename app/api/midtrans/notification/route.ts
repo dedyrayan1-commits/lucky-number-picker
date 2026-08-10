@@ -1,195 +1,296 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import crypto from "crypto";
+import { createClient } from "@supabase/supabase-js";
 
-import { serviceClient } from "@/lib/supabase/service";
-import { activateMembership } from "@/lib/services/membership";
+function getActivationDate(transactionTime?: string | null) {
+  if (!transactionTime) {
+    return new Date();
+  }
 
-export async function POST(req: NextRequest) {
+  const normalized = transactionTime.includes("T")
+    ? transactionTime
+    : transactionTime.replace(" ", "T");
+
+  const hasTimezone =
+    normalized.endsWith("Z") ||
+    /[+-]\d{2}:\d{2}$/.test(normalized);
+
+  const date = new Date(
+    hasTimezone ? normalized : `${normalized}+07:00`
+  );
+
+  if (Number.isNaN(date.getTime())) {
+    return new Date();
+  }
+
+  return date;
+}
+
+export async function POST(request: Request) {
   try {
-    console.log("=================================");
-    console.log("MIDTRANS WEBHOOK");
-    console.log("=================================");
-
-    const body = await req.json();
+    const body = await request.json();
 
     const {
       order_id,
-      transaction_status,
-      fraud_status,
-      payment_type,
-      transaction_id,
-      transaction_time,
       status_code,
       gross_amount,
       signature_key,
+      transaction_status,
+      fraud_status,
+      transaction_id,
+      payment_type,
+      transaction_time,
     } = body;
 
-    // ==============================
-    // Verify Signature
-    // ==============================
+    const serverKey = process.env.MIDTRANS_SERVER_KEY;
+    const supabaseUrl =
+      process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseSecretKey =
+      process.env.SUPABASE_SECRET_KEY;
 
-    const signature = crypto
+    if (!serverKey) {
+      console.error(
+        "MIDTRANS_SERVER_KEY tidak ditemukan."
+      );
+
+      return NextResponse.json(
+        { error: "Server configuration error." },
+        { status: 500 }
+      );
+    }
+
+    if (!supabaseUrl || !supabaseSecretKey) {
+      console.error(
+        "SUPABASE URL atau SUPABASE_SECRET_KEY tidak ditemukan."
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            "Supabase server configuration error.",
+        },
+        { status: 500 }
+      );
+    }
+
+    const expectedSignature = crypto
       .createHash("sha512")
       .update(
-        order_id +
-          status_code +
-          gross_amount +
-          process.env.MIDTRANS_SERVER_KEY
+        `${order_id}${status_code}${gross_amount}${serverKey}`
       )
       .digest("hex");
 
-    if (signature !== signature_key) {
+    if (expectedSignature !== signature_key) {
+      console.error(
+        "MIDTRANS NOTIFICATION: Signature tidak valid."
+      );
+
       return NextResponse.json(
-        {
-          error: "Invalid Signature",
-        },
-        {
-          status: 403,
-        }
+        { error: "Invalid signature." },
+        { status: 401 }
       );
     }
 
-    // ==============================
-    // Cari Order
-    // ==============================
+    const orderId = Number(
+      String(order_id).replace("LNP-", "")
+    );
 
-    const { data: order, error: orderError } =
-      await serviceClient
-        .from("orders")
-        .select("*")
-        .eq("id", order_id)
-        .single();
+    if (!Number.isInteger(orderId)) {
+      console.error(
+        "MIDTRANS NOTIFICATION: Order ID tidak valid:",
+        order_id
+      );
 
-    if (orderError || !order) {
       return NextResponse.json(
-        {
-          error: "Order tidak ditemukan",
-        },
-        {
-          status: 404,
-        }
+        { error: "Invalid order ID." },
+        { status: 400 }
       );
     }
 
-    // ==============================
-    // Idempotent Check
-    // ==============================
-
-    if (order.membership_activated_at) {
-      console.log("Webhook sudah pernah diproses.");
-
-      return NextResponse.json({
-        success: true,
-      });
-    }
-
-    // ==============================
-    // Tentukan Status
-    // ==============================
-
-    let status = "pending";
+    let orderStatus = "pending";
 
     if (
       transaction_status === "capture" &&
       fraud_status === "accept"
     ) {
-      status = "paid";
+      orderStatus = "paid";
     } else if (
       transaction_status === "settlement"
     ) {
-      status = "paid";
+      orderStatus = "paid";
     } else if (
       transaction_status === "pending"
     ) {
-      status = "pending";
+      orderStatus = "pending";
     } else if (
       transaction_status === "deny" ||
-      transaction_status === "cancel" ||
+      transaction_status === "cancel"
+    ) {
+      orderStatus = "cancelled";
+    } else if (
       transaction_status === "expire"
     ) {
-      status = "failed";
+      orderStatus = "expired";
     }
 
-        console.log("STATUS :", status);
+    const supabase = createClient(
+      supabaseUrl,
+      supabaseSecretKey,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+      }
+    );
 
-    // ==============================
-    // Update Order
-    // ==============================
-
-    const { error: updateOrderError } = await serviceClient
+    const {
+      data: updatedOrder,
+      error: orderUpdateError,
+    } = await supabase
       .from("orders")
       .update({
-        status,
-        payment_type,
-        transaction_id,
-        transaction_time,
+        status: orderStatus,
+        transaction_id:
+          transaction_id ?? null,
+        payment_type:
+          payment_type ?? null,
+        transaction_time:
+          transaction_time ?? null,
       })
-      .eq("id", order_id);
+      .eq("id", orderId)
+      .select(
+        "id, user_id, package, status, membership_activated_at"
+      )
+      .single();
 
-    if (updateOrderError) {
-      console.error(updateOrderError);
+    if (orderUpdateError || !updatedOrder) {
+      console.error(
+        "MIDTRANS NOTIFICATION DATABASE ERROR:",
+        orderUpdateError
+      );
 
       return NextResponse.json(
-        {
-          error: "Gagal mengupdate order",
-        },
-        {
-          status: 500,
-        }
+        { error: "Gagal memperbarui order." },
+        { status: 500 }
       );
     }
 
-    // ==============================
-    // Aktivasi Membership
-    // ==============================
+    if (
+      orderStatus === "paid" &&
+      !updatedOrder.membership_activated_at
+    ) {
+      const validMemberships = [
+        "premium_regular",
+        "premium_toto",
+        "vip",
+      ];
 
-    if (status === "paid") {
-      console.log("Mengaktifkan membership...");
+      if (
+        !validMemberships.includes(
+          updatedOrder.package
+        )
+      ) {
+        console.error(
+          "MIDTRANS NOTIFICATION: Package tidak valid:",
+          updatedOrder.package
+        );
 
-      const activatedAt = await activateMembership({
-        userId: order.user_id,
-        packageId: order.package,
-      });
+        return NextResponse.json(
+          { error: "Package tidak valid." },
+          { status: 400 }
+        );
+      }
 
-      const { error: activatedError } = await serviceClient
+      const activatedAt =
+        getActivationDate(transaction_time);
+
+      const expiredAt = new Date(
+        activatedAt.getTime() +
+          7 * 24 * 60 * 60 * 1000
+      );
+
+      const {
+        error: profileUpdateError,
+      } = await supabase
+        .from("profiles")
+        .update({
+          membership: updatedOrder.package,
+          membership_expired_at:
+            expiredAt.toISOString(),
+        })
+        .eq("id", updatedOrder.user_id);
+
+      if (profileUpdateError) {
+        console.error(
+          "MIDTRANS MEMBERSHIP UPDATE ERROR:",
+          profileUpdateError
+        );
+
+        return NextResponse.json(
+          {
+            error:
+              "Pembayaran berhasil tetapi membership gagal diaktifkan.",
+          },
+          { status: 500 }
+        );
+      }
+
+      const {
+        error: activationUpdateError,
+      } = await supabase
         .from("orders")
         .update({
           membership_activated_at:
             activatedAt.toISOString(),
         })
-        .eq("id", order.id);
+        .eq("id", orderId);
 
-      if (activatedError) {
-        console.error(activatedError);
+      if (activationUpdateError) {
+        console.error(
+          "MIDTRANS MEMBERSHIP ACTIVATION ERROR:",
+          activationUpdateError
+        );
 
         return NextResponse.json(
           {
             error:
-              "Membership berhasil tetapi gagal mengupdate order.",
+              "Membership berhasil diperbarui tetapi waktu aktivasi order gagal disimpan.",
           },
-          {
-            status: 500,
-          }
+          { status: 500 }
         );
       }
 
-      console.log("Membership berhasil diaktifkan.");
+      console.log(
+        "MIDTRANS MEMBERSHIP ACTIVATED:",
+        order_id,
+        updatedOrder.package,
+        expiredAt.toISOString()
+      );
     }
+
+    console.log(
+      "MIDTRANS NOTIFICATION SUCCESS:",
+      order_id,
+      transaction_status,
+      updatedOrder.status
+    );
 
     return NextResponse.json({
       success: true,
     });
   } catch (error) {
-    console.error("WEBHOOK ERROR");
-    console.error(error);
+    console.error(
+      "MIDTRANS NOTIFICATION ERROR:",
+      error
+    );
 
     return NextResponse.json(
       {
-        error: "Webhook Error",
+        error:
+          "Terjadi kesalahan pada notification handler.",
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }

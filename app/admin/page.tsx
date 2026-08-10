@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 
 import AdminMarketCard from "@/components/AdminMarketCard";
 import MemberManagementCard from "@/components/MemberManagementCard";
+import AdminAdCard from "@/components/AdminAdCard";
+import AdminAdCreateForm from "@/components/AdminAdCreateForm";
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -47,9 +49,13 @@ export default async function AdminPage() {
     .select("*")
     .order("created_at");
 
+  const { data: ads } = await supabase
+    .from("ads")
+    .select("*")
+    .order("created_at");
+
   return (
     <main className="min-h-screen bg-slate-950 p-10 text-white">
-
       <h1 className="text-4xl font-bold">
         Admin Panel
       </h1>
@@ -66,16 +72,16 @@ export default async function AdminPage() {
         <div className="grid gap-6 lg:grid-cols-2">
           {markets?.map((market) => (
             <AdminMarketCard
-  key={market.id}
-  marketId={market.id}
-  marketName={market.name}
-  prediction={market.prediction}
-  officialResult={market.official_result}
-  drawNumber={market.draw_number}
-  drawDate={market.draw_date}
-  countryCode={market.country_code}
-  status={market.status}
-/>
+              key={market.id}
+              marketId={market.id}
+              marketName={market.name}
+              prediction={market.prediction}
+              officialResult={market.official_result}
+              drawNumber={market.draw_number}
+              drawDate={market.draw_date}
+              countryCode={market.country_code}
+              status={market.status}
+            />
           ))}
         </div>
       </section>
@@ -98,6 +104,31 @@ export default async function AdminPage() {
         </div>
       </section>
 
+      <section className="mt-16">
+        <h2 className="mb-6 text-2xl font-bold">
+          Advertisement Management
+        </h2>
+
+        <div className="mb-8">
+          <AdminAdCreateForm />
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          {ads?.map((ad) => (
+            <AdminAdCard
+              key={ad.id}
+              id={ad.id}
+              title={ad.title}
+              imageUrl={ad.image_url}
+              targetUrl={ad.target_url}
+              position={ad.position}
+              isActive={ad.is_active}
+              startAt={ad.start_at}
+              endAt={ad.end_at}
+            />
+          ))}
+        </div>
+      </section>
     </main>
   );
 }

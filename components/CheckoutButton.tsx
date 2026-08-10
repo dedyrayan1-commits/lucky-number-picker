@@ -1,15 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
 
 type CheckoutButtonProps = {
-  packageId: string;
+  plan: "premium_regular" | "premium_toto" | "vip";
 };
 
 export default function CheckoutButton({
-  packageId,
+  plan,
 }: CheckoutButtonProps) {
   const [loading, setLoading] = useState(false);
 
@@ -23,44 +21,29 @@ export default function CheckoutButton({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-  packageId,
-}),
+          packageId: plan,
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        toast.error(data.error ?? "Checkout gagal.");
+        alert(data.error ?? "Gagal membuat transaksi.");
         return;
       }
 
-      if (!window.snap) {
-        toast.error("Midtrans Snap belum dimuat.");
+      if (!data.redirect_url) {
+        alert("URL pembayaran Midtrans tidak ditemukan.");
         return;
       }
 
-      window.snap.pay(data.token, {
-        onSuccess: function () {
-          toast.success("Pembayaran berhasil.");
-          window.location.href = "/checkout/success";
-        },
-
-        onPending: function () {
-          toast("Menunggu pembayaran.");
-        },
-
-        onError: function () {
-          toast.error("Pembayaran gagal.");
-        },
-
-        onClose: function () {
-          toast("Popup pembayaran ditutup.");
-        },
-      });
+      window.location.href = data.redirect_url;
     } catch (error) {
-      console.error(error);
+      console.error("CHECKOUT ERROR:", error);
 
-      toast.error("Terjadi kesalahan saat checkout.");
+      alert(
+        "Terjadi kesalahan saat menghubungkan ke pembayaran."
+      );
     } finally {
       setLoading(false);
     }
@@ -68,18 +51,14 @@ export default function CheckoutButton({
 
   return (
     <button
+      type="button"
       onClick={handleCheckout}
       disabled={loading}
-      className="rounded-xl bg-emerald-600 px-6 py-3 font-semibold transition hover:bg-emerald-700 disabled:opacity-60"
+      className="mt-8 w-full rounded-xl bg-emerald-600 px-6 py-4 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {loading ? (
-        <>
-          <Loader2 className="mr-2 inline h-5 w-5 animate-spin" />
-          Memproses...
-        </>
-      ) : (
-        "Lanjut Pembayaran"
-      )}
+      {loading
+        ? "Memproses Pembayaran..."
+        : "Lanjut Pembayaran"}
     </button>
   );
 }

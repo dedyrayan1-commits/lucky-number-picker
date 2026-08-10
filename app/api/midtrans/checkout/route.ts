@@ -1,34 +1,53 @@
-import { NextRequest, NextResponse } from "next/server";
-import { snap } from "@/lib/midtrans";
+import { NextResponse } from "next/server";
+
 import { createClient } from "@/lib/supabase/server";
-import {
-  MEMBERSHIP_PACKAGES,
-  MembershipPackageId,
-} from "@/lib/membership";
+import { snap } from "@/lib/midtrans";
 
-export async function POST(req: NextRequest) {
-  console.log("=================================");
-  console.log("CHECKOUT ROUTE MASUK");
-  console.log("=================================");
+const PACKAGES = {
+  premium_regular: {
+    name: "Premium Regular",
+    amount: 15000,
+  },
+  premium_toto: {
+    name: "Premium Toto Macau 4D",
+    amount: 20000,
+  },
+  vip: {
+    name: "VIP",
+    amount: 30000,
+  },
+} as const;
 
+type PackageId = keyof typeof PACKAGES;
+
+export async function POST(request: Request) {
   try {
+    const notificationUrl =
+      process.env.MIDTRANS_NOTIFICATION_URL;
+
+    if (!notificationUrl) {
+      console.error(
+        "MIDTRANS_NOTIFICATION_URL tidak ditemukan."
+      );
+
+      return NextResponse.json(
+        {
+          error: "Notification URL belum dikonfigurasi.",
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
     const supabase = await createClient();
 
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    console.log("SESSION :", session);
-
-    const {
       data: { user },
-      error: authError,
+      error: userError,
     } = await supabase.auth.getUser();
 
-    console.log("USER :", user);
-    console.log("AUTH ERROR :", authError);
-
-    if (authError || !user) {
+    if (userError || !user) {
       return NextResponse.json(
         {
           error: "Silakan login terlebih dahulu.",
@@ -39,17 +58,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = await req.json();
+    const body = await request.json();
 
-    console.log("BODY :", body);
-
-    const packageId = body?.packageId as
-      | MembershipPackageId
-      | undefined;
+    const packageId =
+      body?.packageId as PackageId | undefined;
 
     if (
       !packageId ||
-      !(packageId in MEMBERSHIP_PACKAGES)
+      !(packageId in PACKAGES)
     ) {
       return NextResponse.json(
         {
@@ -62,16 +78,7 @@ export async function POST(req: NextRequest) {
     }
 
     const selectedPackage =
-      MEMBERSHIP_PACKAGES[packageId];
-
-    console.log("INSERT ORDER...");
-
-    console.log({
-      user_id: user.id,
-      package: packageId,
-      amount: selectedPackage.price,
-      status: "pending",
-    });
+      PACKAGES[packageId];
 
     const { data: order, error: orderError } =
       await supabase
@@ -79,20 +86,21 @@ export async function POST(req: NextRequest) {
         .insert({
           user_id: user.id,
           package: packageId,
-          amount: selectedPackage.price,
+          amount: selectedPackage.amount,
           status: "pending",
         })
-        .select()
+        .select("id")
         .single();
 
-    console.log("ORDER :", order);
-    console.log("ORDER ERROR :", orderError);
-
     if (orderError || !order) {
+      console.error(
+        "CREATE ORDER ERROR:",
+        orderError
+      );
+
       return NextResponse.json(
         {
           error: "Gagal membuat order.",
-          details: orderError,
         },
         {
           status: 500,
@@ -100,57 +108,65 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log("MEMBUAT TRANSAKSI MIDTRANS...");
+    const transactionId =
+      `LNP-${order.id}`;
+
+    snap.httpClient.http_client.defaults.headers.common[
+      "X-Override-Notification"
+    ] = notificationUrl;
 
     const transaction =
       await snap.createTransaction({
         transaction_details: {
-          order_id: String(order.id),
-          gross_amount: Number(order.amount),
-        },
-
-        customer_details: {
-          first_name:
-            user.user_metadata?.full_name ??
-            user.email ??
-            "Lucky Number Picker Member",
-
-          email: user.email!,
+          order_id: transactionId,
+          gross_amount:
+            selectedPackage.amount,
         },
 
         item_details: [
           {
             id: packageId,
-            name: selectedPackage.name,
+            price: selectedPackage.amount,
             quantity: 1,
-            price: selectedPackage.price,
+            name: selectedPackage.name,
           },
         ],
 
-        expiry: {
-          unit: "hour",
-          duration: 24,
+        customer_details: {
+          email: user.email ?? undefined,
         },
       });
 
-    console.log("MIDTRANS BERHASIL");
-    console.log(transaction);
+    const { error: updateError } =
+      await supabase
+        .from("orders")
+        .update({
+          transaction_id: transactionId,
+        })
+        .eq("id", order.id);
+
+    if (updateError) {
+      console.error(
+        "UPDATE TRANSACTION ID ERROR:",
+        updateError
+      );
+    }
 
     return NextResponse.json({
-      success: true,
       token: transaction.token,
       redirect_url:
         transaction.redirect_url,
-      orderId: order.id,
     });
-  } catch (err) {
-    console.error("CHECKOUT ERROR");
-    console.error(err);
+  } catch (error) {
+    console.error(
+      "MIDTRANS CHECKOUT ERROR:",
+      error
+    );
 
     return NextResponse.json(
       {
         error:
-          "Terjadi kesalahan saat memproses checkout.",
+          "Terjadi kesalahan saat membuat transaksi.",
       },
       {
         status: 500,

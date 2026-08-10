@@ -54,20 +54,18 @@ export default function MemberManagementCard({
 
   return (
     <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 text-white">
-
       <h2 className="text-2xl font-bold">
         {fullName}
       </h2>
 
       <p className="mt-2 text-slate-400">
-        Role :{" "}
+        Role:{" "}
         <span className="font-semibold text-emerald-400">
           {role}
         </span>
       </p>
 
       <div className="mt-6">
-
         <label className="mb-2 block text-sm text-slate-400">
           Membership
         </label>
@@ -94,9 +92,7 @@ export default function MemberManagementCard({
           <option value="vip">
             VIP
           </option>
-
         </select>
-
       </div>
 
       <button
@@ -104,7 +100,6 @@ export default function MemberManagementCard({
         disabled={loading}
         className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-600 py-3 font-semibold transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
       >
-
         {loading ? (
           <>
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -113,9 +108,7 @@ export default function MemberManagementCard({
         ) : (
           "Simpan Membership"
         )}
-
       </button>
-
     </div>
   );
 }

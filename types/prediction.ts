@@ -1,9 +1,13 @@
-export type CountryCode = "HK" | "SG" | "SYD" | "MACAU";
+export type CountryCode =
+  | "HK"
+  | "SG"
+  | "SYD"
+  | "MACAU";
 
 export type PredictionStatus =
   | "Draft"
   | "Published"
-  | "Completed";
+  | "Finished";
 
 export interface Prediction {
   id: number;
@@ -16,9 +20,9 @@ export interface Prediction {
 
   draw_date: string;
 
-  prediction: number[];
+  prediction: string;
 
-  official_result: number[];
+  official_result: string;
 
   status: PredictionStatus;
 
