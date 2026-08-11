@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import LogoutButton from "@/components/LogoutButton";
@@ -199,6 +200,13 @@ export default async function DashboardPage() {
               <p className="mt-4 max-w-md text-slate-300">
                 Gunakan Lucky Number Picker untuk melihat prediksi market pilihan Anda.
               </p>
+
+              <Link
+                href="/premium"
+                className="mt-6 inline-flex rounded-xl bg-amber-400 px-6 py-3 font-semibold text-slate-950 transition hover:bg-amber-300"
+              >
+                👑 Upgrade Membership
+              </Link>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
