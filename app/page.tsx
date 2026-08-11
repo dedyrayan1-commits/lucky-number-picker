@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import FeatureCard from "@/components/FeatureCard";
@@ -51,7 +52,20 @@ export default async function Home() {
   return (
     <>
       <main className="min-h-screen bg-slate-950 text-white">
-        <section className="mx-auto flex min-h-screen max-w-6xl flex-col items-center justify-center px-6 text-center">
+        <section className="mx-auto max-w-5xl px-6 pt-8 md:pt-10">
+          <div className="overflow-hidden rounded-2xl border border-fuchsia-500/40 bg-black shadow-2xl shadow-fuchsia-950/30">
+            <Image
+              src="/lucky-number-picker-banner.png"
+              alt="Lucky Number Picker"
+              width={1036}
+              height={376}
+              priority
+              className="h-auto w-full"
+            />
+          </div>
+        </section>
+
+        <section className="mx-auto flex max-w-6xl flex-col items-center justify-center px-6 py-20 text-center md:py-24">
           <div className="mb-8 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/login"
@@ -96,6 +110,18 @@ export default async function Home() {
             >
               👑 Jadi Member Premium
             </Link>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-5xl px-6 pb-8">
+          <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-xl">
+            <Image
+              src="/market-populer-banner.png"
+              alt="Market Populer Lucky Number Picker"
+              width={1098}
+              height={396}
+              className="h-auto w-full"
+            />
           </div>
         </section>
 
