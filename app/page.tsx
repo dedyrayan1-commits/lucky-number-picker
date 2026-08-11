@@ -52,6 +52,22 @@ export default async function Home() {
     <>
       <main className="min-h-screen bg-slate-950 text-white">
         <section className="mx-auto flex min-h-screen max-w-6xl flex-col items-center justify-center px-6 text-center">
+          <div className="mb-8 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/login"
+              className="rounded-xl border border-slate-700 px-6 py-3 font-semibold text-slate-200 transition hover:border-emerald-400 hover:text-emerald-400"
+            >
+              Masuk
+            </Link>
+
+            <Link
+              href="/register"
+              className="rounded-xl bg-emerald-500 px-6 py-3 font-semibold text-white transition hover:bg-emerald-600"
+            >
+              Daftar
+            </Link>
+          </div>
+
           <p className="text-sm uppercase tracking-[0.3em] text-emerald-400">
             Diperbarui Setiap Hari
           </p>
