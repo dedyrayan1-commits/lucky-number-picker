@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -100,6 +101,69 @@ export default async function DashboardPage() {
       (market) => market.name === "Toto Macau"
     ) ?? [];
 
+  const membership = profile?.membership ?? "free";
+
+  const membershipVisual =
+    membership === "premium_regular"
+      ? {
+          eyebrow: "MEMBERSHIP AKTIF",
+          title: "PREMIUM REGULAR",
+          description: "Akses premium untuk market Hong Kong, Sydney, dan Singapore.",
+          accent: "text-emerald-300",
+          badge: "border-emerald-400/30 bg-emerald-400/10 text-emerald-300",
+          border: "border-emerald-400/35",
+          glow: "shadow-[0_0_60px_rgba(16,185,129,0.12)]",
+          overlay:
+            "from-emerald-950/95 via-slate-950/82 to-slate-950/68",
+          image: "/premium-v5/premium-shield.png",
+          imageAlt: "Premium Regular",
+          cta: "Lihat Paket Lain",
+        }
+      : membership === "premium_toto"
+        ? {
+            eyebrow: "MEMBERSHIP AKTIF",
+            title: "PREMIUM TOTO",
+            description: "Akses khusus untuk market Toto Macau 4D.",
+            accent: "text-cyan-300",
+            badge: "border-cyan-400/30 bg-cyan-400/10 text-cyan-300",
+            border: "border-cyan-400/40",
+            glow: "shadow-[0_0_65px_rgba(34,211,238,0.14)]",
+            overlay:
+              "from-[#041a2a]/95 via-[#061827]/82 to-slate-950/60",
+            image: "/premium-v5/premium-diamond.png",
+            imageAlt: "Premium Toto Macau 4D",
+            cta: "Lihat Paket Lain",
+          }
+        : membership === "vip"
+          ? {
+              eyebrow: "MEMBERSHIP AKTIF",
+              title: "VIP",
+              description: "Akses lengkap ke seluruh market Lucky Number Picker.",
+              accent: "text-amber-300",
+              badge: "border-amber-300/30 bg-amber-300/10 text-amber-300",
+              border: "border-amber-300/45",
+              glow: "shadow-[0_0_65px_rgba(251,191,36,0.14)]",
+              overlay:
+                "from-amber-950/95 via-slate-950/82 to-slate-950/68",
+              image: "/premium-v5/premium-crown.png",
+              imageAlt: "VIP",
+              cta: "Lihat Paket Lain",
+            }
+          : {
+              eyebrow: "MEMBERSHIP",
+              title: "FREE",
+              description: "Upgrade membership untuk membuka akses prediksi premium.",
+              accent: "text-slate-200",
+              badge: "border-slate-500/30 bg-slate-500/10 text-slate-200",
+              border: "border-slate-700",
+              glow: "shadow-[0_0_45px_rgba(15,23,42,0.18)]",
+              overlay:
+                "from-slate-950/98 via-slate-950/90 to-slate-950/72",
+              image: "/premium-v5/premium-diamond.png",
+              imageAlt: "Membership",
+              cta: "Upgrade Membership",
+            };
+
   function MarketCard({ market }: { market: any }) {
     const showPrediction =
       market.status === "Published" ||
@@ -134,7 +198,6 @@ export default async function DashboardPage() {
         </div>
 
         <div className="mt-6 grid gap-4">
-          {/* Prediction */}
           <div className="rounded-xl bg-slate-800 p-4">
             <p className="text-sm text-slate-400">
               Prediction
@@ -149,7 +212,6 @@ export default async function DashboardPage() {
             </p>
           </div>
 
-          {/* Official Result */}
           <div className="rounded-xl bg-slate-800 p-4">
             <p className="text-sm text-slate-400">
               Official Result
@@ -170,90 +232,189 @@ export default async function DashboardPage() {
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
       <div className="mx-auto max-w-6xl">
 
-        {/* Header */}
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-4xl font-bold">
-              Halo, {profile?.full_name ?? "User"} 👋
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
+              MEMBER DASHBOARD
+            </p>
+
+            <h1 className="mt-3 text-4xl font-black tracking-tight md:text-5xl">
+              Halo,{" "}
+              <span className="bg-gradient-to-r from-white via-cyan-100 to-cyan-300 bg-clip-text text-transparent">
+                {profile?.full_name ?? "User"}
+              </span>{" "}
+              👋
             </h1>
 
-            <p className="mt-2 text-slate-400">
+            <p className="mt-3 text-slate-400">
               Selamat datang kembali di Lucky Number Picker.
             </p>
           </div>
 
-          <LogoutButton />
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-2 shadow-lg">
+            <LogoutButton />
+          </div>
         </div>
 
-        {/* Hero */}
-        <div className="mt-10 rounded-3xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-slate-900 p-8">
-          <div className="grid gap-8 lg:grid-cols-2">
-            <div>
-              <p className="text-sm uppercase tracking-[0.3em] text-emerald-300">
-                Membership
-              </p>
+        <div
+          className={`relative mt-10 overflow-hidden rounded-[32px] border ${membershipVisual.border} ${membershipVisual.glow}`}
+        >
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: 'url("/dashboard/macau-tower-night.jpg")',
+            }}
+          />
 
-              <h2 className="mt-3 text-5xl font-bold capitalize">
-                {profile?.membership ?? "Free"}
-              </h2>
+          <div
+            className={`absolute inset-0 bg-gradient-to-r ${membershipVisual.overlay}`}
+          />
 
-              <p className="mt-4 max-w-md text-slate-300">
-                Gunakan Lucky Number Picker untuk melihat prediksi market pilihan Anda.
-              </p>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(34,211,238,0.14),transparent_34%)]" />
 
-              <Link
-                href="/premium"
-                className="mt-6 inline-flex rounded-xl bg-amber-400 px-6 py-3 font-semibold text-slate-950 transition hover:bg-amber-300"
-              >
-                👑 Upgrade Membership
-              </Link>
+          <div className="relative grid gap-8 p-6 md:p-8 lg:grid-cols-[1.15fr_1fr] lg:p-10">
+            <div className="flex flex-col justify-between">
+              <div>
+                <div
+                  className={`inline-flex rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.28em] ${membershipVisual.badge}`}
+                >
+                  {membershipVisual.eyebrow}
+                </div>
+
+                <div className="mt-6 flex items-center gap-4">
+                  <div className="flex h-24 w-24 items-center justify-center rounded-[26px] border border-white/10 bg-black/25 backdrop-blur-sm">
+                    <Image
+                      src={membershipVisual.image}
+                      alt={membershipVisual.imageAlt}
+                      width={104}
+                      height={104}
+                      className="h-20 w-20 object-contain"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-300">
+                      Status Membership
+                    </p>
+
+                    <h2
+                      className={`mt-2 text-4xl font-black uppercase italic tracking-tight md:text-5xl ${membershipVisual.accent}`}
+                    >
+                      {membershipVisual.title}
+                    </h2>
+                  </div>
+                </div>
+
+                <p className="mt-6 max-w-xl text-base leading-7 text-slate-200 md:text-lg">
+                  {membershipVisual.description}
+                </p>
+
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  <div className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-semibold backdrop-blur-sm">
+                    Membership:{" "}
+                    <span className={membershipVisual.accent}>
+                      {membership.replaceAll("_", " ")}
+                    </span>
+                  </div>
+
+                  <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm font-bold text-emerald-300 backdrop-blur-sm">
+                    ● Aktif
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  href="/premium"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3.5 font-black text-white shadow-[0_0_28px_rgba(34,211,238,0.18)] transition hover:brightness-110"
+                >
+                  👑 {membershipVisual.cta}
+                </Link>
+
+                <Link
+                  href="/predictions"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-black/20 px-6 py-3.5 font-semibold text-slate-100 backdrop-blur-sm transition hover:bg-white/10"
+                >
+                  🎯 Lihat Prediksi
+                </Link>
+              </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl bg-slate-900/70 p-5">
-                <p className="text-sm text-slate-400">
-                  Hari Ini
-                </p>
+              <div className="rounded-2xl border border-blue-400/20 bg-slate-950/60 p-5 backdrop-blur-md">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-slate-400">
+                      Hari Ini
+                    </p>
+                    <p className="mt-3 font-bold leading-6 text-white">
+                      {today}
+                    </p>
+                  </div>
 
-                <p className="mt-3 font-semibold">
-                  {today}
-                </p>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-blue-400/20 bg-blue-400/10 text-xl">
+                    📅
+                  </div>
+                </div>
               </div>
 
-              <div className="rounded-2xl bg-slate-900/70 p-5">
-                <p className="text-sm text-slate-400">
-                  Status Akun
-                </p>
+              <div className="rounded-2xl border border-emerald-400/20 bg-slate-950/60 p-5 backdrop-blur-md">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-slate-400">
+                      Status Akun
+                    </p>
+                    <p className="mt-3 font-bold capitalize text-emerald-300">
+                      {profile?.role}
+                    </p>
+                    <p className="mt-2 text-xs text-emerald-200/70">
+                      Akun aktif
+                    </p>
+                  </div>
 
-                <p className="mt-3 font-semibold capitalize text-emerald-400">
-                  {profile?.role}
-                </p>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-400/20 bg-emerald-400/10 text-xl">
+                    👤
+                  </div>
+                </div>
               </div>
 
-              <div className="rounded-2xl bg-slate-900/70 p-5">
-                <p className="text-sm text-slate-400">
-                  Favorite Numbers
-                </p>
+              <div className="rounded-2xl border border-fuchsia-400/20 bg-slate-950/60 p-5 backdrop-blur-md">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-slate-400">
+                      Favorite Numbers
+                    </p>
+                    <p className="mt-3 text-3xl font-black">
+                      0
+                    </p>
+                  </div>
 
-                <p className="mt-3 text-3xl font-bold">
-                  0
-                </p>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-fuchsia-400/20 bg-fuchsia-400/10 text-xl">
+                    ☆
+                  </div>
+                </div>
               </div>
 
-              <div className="rounded-2xl bg-slate-900/70 p-5">
-                <p className="text-sm text-slate-400">
-                  Prediction History
-                </p>
+              <div className="rounded-2xl border border-amber-400/20 bg-slate-950/60 p-5 backdrop-blur-md">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-slate-400">
+                      Prediction History
+                    </p>
+                    <p className="mt-3 text-3xl font-black">
+                      0
+                    </p>
+                  </div>
 
-                <p className="mt-3 text-3xl font-bold">
-                  0
-                </p>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-amber-400/20 bg-amber-400/10 text-xl">
+                    ◷
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Dashboard Top Advertisement */}
         <div className="mt-8">
           {dashboardTopAd ? (
             dashboardTopAd.target_url ? (
@@ -285,7 +446,6 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        {/* Regular Markets */}
         <div className="mt-12">
           <h2 className="mb-6 text-3xl font-bold">
             🎯 Regular Markets
@@ -301,7 +461,6 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Premium Special */}
         <div className="mt-14">
           <h2 className="mb-6 text-3xl font-bold text-amber-300">
             👑 Premium Special
@@ -317,7 +476,6 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Dashboard Bottom Advertisement */}
         <div className="mt-12">
           {dashboardBottomAd ? (
             dashboardBottomAd.target_url ? (
