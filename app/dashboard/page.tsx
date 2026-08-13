@@ -423,10 +423,10 @@ export default async function DashboardPage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={dashboardTopAd.title}
-                className="block overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-lg transition hover:-translate-y-1"
+                className="group block overflow-hidden rounded-[26px] border border-cyan-400/20 bg-slate-900 shadow-[0_0_30px_rgba(34,211,238,0.08)] transition duration-300 hover:-translate-y-1 hover:border-cyan-300/40"
               >
                 <div
-                  className="h-[100px] w-full bg-cover bg-center md:h-[150px]"
+                  className="h-[100px] w-full bg-cover bg-center transition duration-500 group-hover:scale-[1.01] md:h-[150px]"
                   style={{
                     backgroundImage: `url("${dashboardTopAd.image_url}")`,
                   }}
@@ -435,14 +435,46 @@ export default async function DashboardPage() {
             ) : (
               <div
                 aria-label={dashboardTopAd.title}
-                className="h-[100px] w-full overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 bg-cover bg-center shadow-lg md:h-[150px]"
+                className="h-[100px] w-full overflow-hidden rounded-[26px] border border-cyan-400/20 bg-slate-900 bg-cover bg-center shadow-[0_0_30px_rgba(34,211,238,0.08)] md:h-[150px]"
                 style={{
                   backgroundImage: `url("${dashboardTopAd.image_url}")`,
                 }}
               />
             )
           ) : (
-            <AdFallback />
+            <div className="relative overflow-hidden rounded-[26px] border border-cyan-400/20 bg-[radial-gradient(circle_at_left,rgba(34,211,238,0.12),transparent_34%),linear-gradient(90deg,#07111f_0%,#0b1628_48%,#07101c_100%)] shadow-[0_0_32px_rgba(34,211,238,0.08)]">
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent" />
+
+              <div className="relative flex min-h-[100px] items-center justify-between gap-5 px-5 py-4 md:min-h-[150px] md:px-7">
+                <div className="flex min-w-0 items-center gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-400/10 text-2xl md:h-14 md:w-14">
+                    📢
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-[0.32em] text-cyan-300 md:text-xs">
+                      Lucky Number Picker
+                    </p>
+                    <h3 className="mt-1 truncate text-lg font-black uppercase tracking-wide text-white md:text-2xl">
+                      Tempat Reklame Premium
+                    </h3>
+                    <p className="mt-1 hidden text-sm text-slate-400 sm:block">
+                      Area promosi eksklusif untuk mitra dan pengiklan pilihan.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="hidden shrink-0 items-center gap-3 sm:flex">
+                  <div className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-cyan-300">
+                    Advertising Space
+                  </div>
+
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 bg-slate-950/70 text-slate-400">
+                    ↗
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
 

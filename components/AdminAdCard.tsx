@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 
 import { createClient } from "@/lib/supabase/client";
@@ -39,6 +39,7 @@ export default function AdminAdCard({
   const [targetUrlValue, setTargetUrlValue] = useState(
     targetUrl ?? ""
   );
+
   const [positionValue, setPositionValue] =
     useState<AdPosition>(position as AdPosition);
 
@@ -55,6 +56,74 @@ export default function AdminAdCard({
 
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleImageUpload(
+    event: ChangeEvent<HTMLInputElement>
+  ) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Format gambar harus JPG, PNG, atau WEBP.");
+      event.target.value = "";
+      return;
+    }
+
+    const maxFileSize = 5 * 1024 * 1024;
+
+    if (file.size > maxFileSize) {
+      toast.error("Ukuran gambar maksimal 5 MB.");
+      event.target.value = "";
+      return;
+    }
+
+    setUploading(true);
+
+    const fileExtension =
+      file.name.split(".").pop()?.toLowerCase() || "jpg";
+
+    const fileName = `${crypto.randomUUID()}.${fileExtension}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("advertisements")
+      .upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type,
+      });
+
+    if (uploadError) {
+      console.error(
+        "ADVERTISEMENT IMAGE UPDATE UPLOAD ERROR:",
+        uploadError
+      );
+
+      setUploading(false);
+      toast.error("Gagal mengupload gambar reklame.");
+      return;
+    }
+
+    const { data } = supabase.storage
+      .from("advertisements")
+      .getPublicUrl(fileName);
+
+    setImageUrlValue(data.publicUrl);
+    setUploading(false);
+
+    toast.success(
+      "Gambar baru berhasil diupload. Klik Simpan Reklame untuk menerapkan perubahan."
+    );
+  }
 
   async function handleSave() {
     if (!titleValue.trim()) {
@@ -63,7 +132,19 @@ export default function AdminAdCard({
     }
 
     if (!imageUrlValue.trim()) {
-      toast.error("URL gambar reklame wajib diisi.");
+      toast.error("Gambar reklame wajib tersedia.");
+      return;
+    }
+
+    if (
+      startAtValue &&
+      endAtValue &&
+      new Date(endAtValue).getTime() <=
+        new Date(startAtValue).getTime()
+    ) {
+      toast.error(
+        "Waktu selesai tayang harus setelah waktu mulai tayang."
+      );
       return;
     }
 
@@ -91,7 +172,6 @@ export default function AdminAdCard({
 
     if (error) {
       console.error("ADMIN AD UPDATE ERROR:", error);
-
       toast.error("Gagal memperbarui reklame.");
       return;
     }
@@ -119,7 +199,6 @@ export default function AdminAdCard({
 
     if (error) {
       console.error("ADMIN AD DELETE ERROR:", error);
-
       toast.error("Gagal menghapus reklame.");
       return;
     }
@@ -171,17 +250,42 @@ export default function AdminAdCard({
 
         <div>
           <label className="mb-2 block text-sm font-semibold text-slate-300">
-            URL Gambar
+            Ganti Gambar Reklame
           </label>
 
           <input
-            type="url"
-            value={imageUrlValue}
-            onChange={(event) =>
-              setImageUrlValue(event.target.value)
-            }
-            className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 outline-none transition focus:border-emerald-500"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleImageUpload}
+            disabled={uploading || loading || deleting}
+            className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-slate-300 file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-500 file:px-4 file:py-2 file:font-semibold file:text-white hover:file:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
           />
+
+          <p className="mt-2 text-xs text-slate-500">
+            Format JPG, PNG, atau WEBP. Maksimal 5 MB.
+          </p>
+
+          {uploading ? (
+            <p className="mt-2 text-sm font-semibold text-emerald-400">
+              Mengupload gambar...
+            </p>
+          ) : null}
+
+          {imageUrlValue ? (
+            <div className="mt-4 overflow-hidden rounded-xl border border-slate-700 bg-slate-950">
+              <img
+                src={imageUrlValue}
+                alt={`Preview ${titleValue || "reklame"}`}
+                className="max-h-64 w-full object-contain"
+              />
+
+              <div className="border-t border-slate-800 px-4 py-3">
+                <p className="text-xs font-semibold text-emerald-400">
+                  Preview gambar reklame
+                </p>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div>
@@ -284,16 +388,20 @@ export default function AdminAdCard({
         <button
           type="button"
           onClick={handleSave}
-          disabled={loading || deleting}
+          disabled={loading || deleting || uploading}
           className="rounded-xl bg-emerald-500 px-6 py-3 font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {loading ? "Menyimpan..." : "Simpan Reklame"}
+          {loading
+            ? "Menyimpan..."
+            : uploading
+              ? "Mengupload Gambar..."
+              : "Simpan Reklame"}
         </button>
 
         <button
           type="button"
           onClick={handleDelete}
-          disabled={loading || deleting}
+          disabled={loading || deleting || uploading}
           className="rounded-xl border border-red-500 px-6 py-3 font-semibold text-red-400 transition hover:bg-red-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
         >
           {deleting ? "Menghapus..." : "Hapus"}

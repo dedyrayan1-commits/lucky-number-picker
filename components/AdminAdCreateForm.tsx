@@ -26,6 +26,73 @@ export default function AdminAdCreateForm() {
   const [endAt, setEndAt] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleImageUpload(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Format gambar harus JPG, PNG, atau WEBP.");
+      event.target.value = "";
+      return;
+    }
+
+    const maxFileSize = 5 * 1024 * 1024;
+
+    if (file.size > maxFileSize) {
+      toast.error("Ukuran gambar maksimal 5 MB.");
+      event.target.value = "";
+      return;
+    }
+
+    setUploading(true);
+
+    const fileExtension =
+      file.name.split(".").pop()?.toLowerCase() || "jpg";
+
+    const fileName = `${crypto.randomUUID()}.${fileExtension}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("advertisements")
+      .upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type,
+      });
+
+    if (uploadError) {
+      console.error(
+        "ADVERTISEMENT IMAGE UPLOAD ERROR:",
+        uploadError
+      );
+
+      setUploading(false);
+
+      toast.error("Gagal mengupload gambar reklame.");
+      return;
+    }
+
+    const { data } = supabase.storage
+      .from("advertisements")
+      .getPublicUrl(fileName);
+
+    setImageUrl(data.publicUrl);
+    setUploading(false);
+
+    toast.success("Gambar reklame berhasil diupload.");
+  }
 
   async function handleCreate() {
     if (!title.trim()) {
@@ -34,7 +101,7 @@ export default function AdminAdCreateForm() {
     }
 
     if (!imageUrl.trim()) {
-      toast.error("URL gambar reklame wajib diisi.");
+      toast.error("Gambar reklame wajib diupload.");
       return;
     }
 
@@ -46,6 +113,7 @@ export default function AdminAdCreateForm() {
       toast.error(
         "Waktu selesai tayang harus setelah waktu mulai tayang."
       );
+
       return;
     }
 
@@ -122,16 +190,42 @@ export default function AdminAdCreateForm() {
 
         <div>
           <label className="mb-2 block text-sm font-semibold text-slate-300">
-            URL Gambar
+            Gambar Reklame
           </label>
 
           <input
-            type="url"
-            value={imageUrl}
-            onChange={(event) => setImageUrl(event.target.value)}
-            placeholder="https://..."
-            className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 outline-none transition focus:border-emerald-500"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleImageUpload}
+            disabled={uploading}
+            className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-slate-300 file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-500 file:px-4 file:py-2 file:font-semibold file:text-white hover:file:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
           />
+
+          <p className="mt-2 text-xs text-slate-500">
+            Format JPG, PNG, atau WEBP. Maksimal 5 MB.
+          </p>
+
+          {uploading ? (
+            <p className="mt-2 text-sm font-semibold text-emerald-400">
+              Mengupload gambar...
+            </p>
+          ) : null}
+
+          {imageUrl ? (
+            <div className="mt-4 overflow-hidden rounded-xl border border-slate-700 bg-slate-950">
+              <img
+                src={imageUrl}
+                alt="Preview reklame"
+                className="max-h-64 w-full object-contain"
+              />
+
+              <div className="border-t border-slate-800 px-4 py-3">
+                <p className="text-xs font-semibold text-emerald-400">
+                  Gambar berhasil diupload
+                </p>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div>
@@ -229,10 +323,14 @@ export default function AdminAdCreateForm() {
       <button
         type="button"
         onClick={handleCreate}
-        disabled={loading}
+        disabled={loading || uploading}
         className="mt-6 rounded-xl bg-emerald-500 px-6 py-3 font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {loading ? "Membuat..." : "Tambah Reklame"}
+        {loading
+          ? "Membuat..."
+          : uploading
+            ? "Mengupload Gambar..."
+            : "Tambah Reklame"}
       </button>
     </div>
   );
