@@ -18,8 +18,40 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lucky Number Picker",
-  description: "Daily Lucky Numbers",
+  metadataBase: new URL("https://luckynumberpick.com"),
+
+  title: {
+    default: "Lucky Number Picker",
+    template: "%s | Lucky Number Picker",
+  },
+
+  description:
+    "Lucky Number Picker provides daily lucky number predictions and official results for Hong Kong, Singapore, Sydney, and Toto Macau.",
+
+  alternates: {
+    canonical: "/",
+  },
+
+  openGraph: {
+    title: "Lucky Number Picker",
+    description:
+      "Daily lucky number predictions and official results for Hong Kong, Singapore, Sydney, and Toto Macau.",
+    url: "https://luckynumberpick.com",
+    siteName: "Lucky Number Picker",
+    type: "website",
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "Lucky Number Picker",
+    description:
+      "Daily lucky number predictions and official results for Hong Kong, Singapore, Sydney, and Toto Macau.",
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
