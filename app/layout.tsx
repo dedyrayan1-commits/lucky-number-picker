@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { Toaster } from "sonner";
+import { Analytics } from "@vercel/analytics/next";
 
 import Navbar from "@/components/Navbar";
 import Container from "@/components/Container";
@@ -72,6 +73,7 @@ export default function RootLayout({
         </Container>
 
         <Toaster richColors position="top-right" />
+        <Analytics />
       </body>
     </html>
   );
