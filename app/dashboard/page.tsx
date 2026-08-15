@@ -272,7 +272,7 @@ export default async function DashboardPage() {
 
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(34,211,238,0.14),transparent_34%)]" />
 
-          <div className="relative grid gap-8 p-6 md:p-8 lg:grid-cols-[1.15fr_1fr] lg:p-10">
+          <div className="relative grid gap-7 p-5 md:p-7 lg:grid-cols-[1.15fr_1fr] lg:p-8">
             <div className="flex flex-col justify-between">
               <div>
                 <div
@@ -281,14 +281,14 @@ export default async function DashboardPage() {
                   {membershipVisual.eyebrow}
                 </div>
 
-                <div className="mt-6 flex items-center gap-4">
-                  <div className="flex h-24 w-24 items-center justify-center rounded-[26px] border border-white/10 bg-black/25 backdrop-blur-sm">
+                <div className="mt-5 flex items-center gap-4">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-[24px] border border-white/10 bg-black/25 backdrop-blur-sm">
                     <Image
                       src={membershipVisual.image}
                       alt={membershipVisual.imageAlt}
                       width={104}
                       height={104}
-                      className="h-20 w-20 object-contain"
+                      className="h-16 w-16 object-contain"
                     />
                   </div>
 
@@ -305,11 +305,11 @@ export default async function DashboardPage() {
                   </div>
                 </div>
 
-                <p className="mt-6 max-w-xl text-base leading-7 text-slate-200 md:text-lg">
+                <p className="mt-5 max-w-xl text-base leading-7 text-slate-200 md:text-lg">
                   {membershipVisual.description}
                 </p>
 
-                <div className="mt-6 flex flex-wrap items-center gap-3">
+                <div className="mt-5 flex flex-wrap items-center gap-3">
                   <div className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-semibold backdrop-blur-sm">
                     Membership:{" "}
                     <span className={membershipVisual.accent}>
@@ -323,7 +323,7 @@ export default async function DashboardPage() {
                 </div>
               </div>
 
-              <div className="mt-8 flex flex-wrap gap-3">
+              <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   href="/premium"
                   className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3.5 font-black text-white shadow-[0_0_28px_rgba(34,211,238,0.18)] transition hover:brightness-110"
@@ -426,7 +426,7 @@ export default async function DashboardPage() {
                 className="group block overflow-hidden rounded-[26px] border border-cyan-400/20 bg-slate-900 shadow-[0_0_30px_rgba(34,211,238,0.08)] transition duration-300 hover:-translate-y-1 hover:border-cyan-300/40"
               >
                 <div
-                  className="h-[100px] w-full bg-cover bg-center transition duration-500 group-hover:scale-[1.01] md:h-[150px]"
+                  className="h-[120px] w-full bg-cover bg-center transition duration-500 group-hover:scale-[1.01] md:h-[180px]"
                   style={{
                     backgroundImage: `url("${dashboardTopAd.image_url}")`,
                   }}
@@ -435,7 +435,7 @@ export default async function DashboardPage() {
             ) : (
               <div
                 aria-label={dashboardTopAd.title}
-                className="h-[100px] w-full overflow-hidden rounded-[26px] border border-cyan-400/20 bg-slate-900 bg-cover bg-center shadow-[0_0_30px_rgba(34,211,238,0.08)] md:h-[150px]"
+                className="h-[120px] w-full overflow-hidden rounded-[26px] border border-cyan-400/20 bg-slate-900 bg-cover bg-center shadow-[0_0_30px_rgba(34,211,238,0.08)] md:h-[180px]"
                 style={{
                   backgroundImage: `url("${dashboardTopAd.image_url}")`,
                 }}
@@ -445,7 +445,7 @@ export default async function DashboardPage() {
             <div className="relative overflow-hidden rounded-[26px] border border-cyan-400/20 bg-[radial-gradient(circle_at_left,rgba(34,211,238,0.12),transparent_34%),linear-gradient(90deg,#07111f_0%,#0b1628_48%,#07101c_100%)] shadow-[0_0_32px_rgba(34,211,238,0.08)]">
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent" />
 
-              <div className="relative flex min-h-[100px] items-center justify-between gap-5 px-5 py-4 md:min-h-[150px] md:px-7">
+              <div className="relative flex min-h-[120px] items-center justify-between gap-5 px-5 py-4 md:min-h-[180px] md:px-7">
                 <div className="flex min-w-0 items-center gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-400/10 text-2xl md:h-14 md:w-14">
                     📢
