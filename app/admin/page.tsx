@@ -7,6 +7,7 @@ import AdminMarketCard from "@/components/AdminMarketCard";
 import MemberManagementCard from "@/components/MemberManagementCard";
 import AdminAdCard from "@/components/AdminAdCard";
 import AdminAdCreateForm from "@/components/AdminAdCreateForm";
+import AdminTotoMacauDraws from "@/components/AdminTotoMacauDraws";
 import LogoutButton from "@/components/LogoutButton";
 
 export default async function AdminPage() {
@@ -44,6 +45,9 @@ export default async function AdminPage() {
     .from("markets")
     .select("*")
     .order("id");
+
+  const totoMacauMarket =
+    markets?.find((market) => market.name === "Toto Macau") ?? null;
 
   const { data: members } = await supabase
     .from("profiles")
@@ -92,6 +96,12 @@ export default async function AdminPage() {
           ))}
         </div>
       </section>
+
+      {totoMacauMarket && (
+        <section className="mt-16">
+          <AdminTotoMacauDraws marketId={totoMacauMarket.id} />
+        </section>
+      )}
 
       <section className="mt-16">
         <h2 className="mb-6 text-2xl font-bold">

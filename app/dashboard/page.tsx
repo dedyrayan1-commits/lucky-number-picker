@@ -101,6 +101,45 @@ export default async function DashboardPage() {
       (market) => market.name === "Toto Macau"
     ) ?? [];
 
+  const totoMacauMarket =
+    specialMarkets[0] ?? null;
+
+  const jakartaDrawDate = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
+  const { data: totoMacauDrawRows } = totoMacauMarket
+    ? await supabase
+        .from("toto_macau_draws")
+        .select(
+          "draw_round, prediction, official_result, status"
+        )
+        .eq("market_id", totoMacauMarket.id)
+        .eq("draw_date", jakartaDrawDate)
+        .order("draw_round")
+    : { data: null };
+
+  const totoMacauDraws = Array.from(
+    { length: 6 },
+    (_, index) => {
+      const drawRound = index + 1;
+
+      const savedDraw = totoMacauDrawRows?.find(
+        (draw) => draw.draw_round === drawRound
+      );
+
+      return {
+        draw_round: drawRound,
+        prediction: savedDraw?.prediction ?? "",
+        official_result: savedDraw?.official_result ?? "",
+        status: savedDraw?.status ?? "Draft",
+      };
+    }
+  );
+
   const membership = profile?.membership ?? "free";
 
   const membershipVisual =
@@ -498,14 +537,95 @@ export default async function DashboardPage() {
             👑 Premium Special
           </h2>
 
-          <div className="grid gap-6">
-            {specialMarkets.map((market) => (
-              <MarketCard
-                key={market.id}
-                market={market}
-              />
-            ))}
-          </div>
+          {totoMacauMarket ? (
+            <div className="overflow-hidden rounded-3xl border border-cyan-500/25 bg-slate-900 shadow-[0_0_45px_rgba(34,211,238,0.07)]">
+              <div className="border-b border-slate-800 bg-gradient-to-r from-cyan-950/40 via-slate-900 to-slate-900 px-6 py-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.28em] text-cyan-300">
+                      Toto Macau 4D
+                    </p>
+
+                    <h3 className="mt-2 text-2xl font-black">
+                      6 Draw Hari Ini
+                    </h3>
+                  </div>
+
+                  <div className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-300">
+                    {jakartaDrawDate}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-4 p-5 md:grid-cols-2 lg:p-6">
+                {totoMacauDraws.map((draw) => {
+                  const showPrediction =
+                    draw.status === "Published" ||
+                    draw.status === "Finished";
+
+                  const showOfficial =
+                    draw.status === "Finished";
+
+                  return (
+                    <div
+                      key={draw.draw_round}
+                      className="rounded-2xl border border-slate-800 bg-slate-950/55 p-5"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-lg font-black text-cyan-300">
+                          DRAW #{draw.draw_round}
+                        </p>
+
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-bold ${
+                            draw.status === "Draft"
+                              ? "bg-yellow-500/15 text-yellow-300"
+                              : draw.status === "Published"
+                                ? "bg-emerald-500/15 text-emerald-300"
+                                : "bg-cyan-500/15 text-cyan-300"
+                          }`}
+                        >
+                          {draw.status}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        <div className="rounded-xl bg-slate-900 p-4">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                            Prediction
+                          </p>
+
+                          <p className="mt-2 text-xl font-black tracking-[0.16em] text-white">
+                            {!showPrediction
+                              ? "------"
+                              : canSeeToto
+                                ? draw.prediction || "------"
+                                : "🔒 Premium Only"}
+                          </p>
+                        </div>
+
+                        <div className="rounded-xl bg-slate-900 p-4">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                            Official Result
+                          </p>
+
+                          <p className="mt-2 text-xl font-black tracking-[0.16em] text-white">
+                            {showOfficial
+                              ? draw.official_result || "----"
+                              : "----"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 text-slate-400">
+              Market Toto Macau belum tersedia.
+            </div>
+          )}
         </div>
 
         <div className="mt-12">
