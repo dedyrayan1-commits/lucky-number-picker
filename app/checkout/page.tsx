@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import CheckoutButton from "@/components/CheckoutButton";
+import IPaymuCheckoutButton from "@/components/IPaymuCheckoutButton";
+import { createClient } from "@/lib/supabase/server";
 
 type CheckoutPageProps = {
   searchParams: Promise<{
@@ -38,6 +40,20 @@ export default async function CheckoutPage({
   searchParams,
 }: CheckoutPageProps) {
   const { plan } = await searchParams;
+
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: profile } = user
+    ? await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle()
+    : { data: null };
 
   const selectedPackage =
     plan && plan in PACKAGES
@@ -121,6 +137,18 @@ export default async function CheckoutPage({
           </p>
 
           <CheckoutButton plan={selectedPlan} />
+
+          {user?.email ? (
+            <IPaymuCheckoutButton
+              plan={selectedPlan}
+              name={profile?.full_name ?? "Lucky Number Picker User"}
+              email={user.email}
+            />
+          ) : (
+            <div className="mt-6 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4 text-sm text-cyan-200">
+              Login diperlukan untuk melakukan test pembayaran iPaymu Sandbox.
+            </div>
+          )}
 
           <Link
             href="/premium"
