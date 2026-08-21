@@ -1,28 +1,18 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
+import { createClient } from "@/lib/supabase/server";
 
 const PACKAGES = {
-  premium_regular: {
-    name: "Premium Regular",
-    amount: 15000,
-  },
-  premium_toto: {
-    name: "Premium Toto Macau 4D",
-    amount: 20000,
-  },
-  vip: {
-    name: "VIP",
-    amount: 30000,
-  },
+  premium_regular: { name: "Premium Regular", amount: 15000 },
+  premium_toto: { name: "Premium Toto Macau 4D", amount: 20000 },
+  vip: { name: "VIP", amount: 30000 },
 } as const;
 
 type PackageId = keyof typeof PACKAGES;
 
 function createTimestamp() {
   const now = new Date();
-
-  const pad = (value: number) =>
-    String(value).padStart(2, "0");
+  const pad = (value: number) => String(value).padStart(2, "0");
 
   return (
     now.getUTCFullYear() +
@@ -51,8 +41,7 @@ function createSignature({
     .digest("hex")
     .toLowerCase();
 
-  const stringToSign =
-    `${method}:${va}:${bodyHash}:${apiKey}`;
+  const stringToSign = `${method}:${va}:${bodyHash}:${apiKey}`;
 
   return crypto
     .createHmac("sha256", apiKey)
@@ -62,65 +51,56 @@ function createSignature({
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const supabase = await createClient();
 
-    const packageId =
-      body.packageId as PackageId;
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return NextResponse.json(
+        { error: "Silakan login terlebih dahulu." },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const packageId = body.packageId as PackageId;
 
     const name =
-      typeof body.name === "string"
-        ? body.name.trim()
-        : "";
-
+      typeof body.name === "string" ? body.name.trim() : "";
     const email =
-      typeof body.email === "string"
-        ? body.email.trim()
-        : "";
-
+      typeof body.email === "string" ? body.email.trim() : "";
     const phone =
-      typeof body.phone === "string"
-        ? body.phone.trim()
-        : "";
+      typeof body.phone === "string" ? body.phone.trim() : "";
 
     if (!packageId || !PACKAGES[packageId]) {
       return NextResponse.json(
-        {
-          error:
-            "Paket membership tidak valid.",
-        },
+        { error: "Paket membership tidak valid." },
         { status: 400 }
       );
     }
 
     if (!name || !email || !phone) {
       return NextResponse.json(
-        {
-          error:
-            "Nama, email, dan nomor telepon wajib diisi.",
-        },
+        { error: "Nama, email, dan nomor telepon wajib diisi." },
         { status: 400 }
       );
     }
 
     const va = process.env.IPAYMU_VA;
-    const apiKey =
-      process.env.IPAYMU_API_KEY;
+    const apiKey = process.env.IPAYMU_API_KEY;
 
     if (!va || !apiKey) {
       return NextResponse.json(
-        {
-          error:
-            "Konfigurasi iPaymu Sandbox belum tersedia.",
-        },
+        { error: "Konfigurasi iPaymu Sandbox belum tersedia." },
         { status: 500 }
       );
     }
 
-    const selectedPackage =
-      PACKAGES[packageId];
-
-    const referenceId =
-      `LNP-IPAYMU-${Date.now()}`;
+    const selectedPackage = PACKAGES[packageId];
+    const referenceId = `LNP-IPAYMU-${Date.now()}`;
 
     const paymentBody = {
       name,
@@ -132,31 +112,26 @@ export async function POST(request: Request) {
       referenceId,
       paymentMethod: "qris",
       paymentChannel: "mpm",
-      comments:
-        `Lucky Number Picker - ${selectedPackage.name}`,
+      comments: `Lucky Number Picker - ${selectedPackage.name}`,
     };
 
-    const rawBody =
-      JSON.stringify(paymentBody);
+    const rawBody = JSON.stringify(paymentBody);
 
-    const signature =
-      createSignature({
-        method: "POST",
-        va,
-        apiKey,
-        body: rawBody,
-      });
+    const signature = createSignature({
+      method: "POST",
+      va,
+      apiKey,
+      body: rawBody,
+    });
 
-    const timestamp =
-      createTimestamp();
+    const timestamp = createTimestamp();
 
     const response = await fetch(
       "https://sandbox.ipaymu.com/api/v2/payment/direct",
       {
         method: "POST",
         headers: {
-          "Content-Type":
-            "application/json",
+          "Content-Type": "application/json",
           va,
           signature,
           timestamp,
@@ -166,29 +141,55 @@ export async function POST(request: Request) {
       }
     );
 
-    const data =
-      await response.json();
+    const data = await response.json();
 
-    if (
-      !response.ok ||
-      data?.Success === false
-    ) {
-      console.error(
-        "IPAYMU SANDBOX ERROR:",
-        data
-      );
+    if (!response.ok || data?.Success === false) {
+      console.error("IPAYMU SANDBOX ERROR:", data);
 
       return NextResponse.json(
         {
           error:
-            data?.Message ??
-            "Gagal membuat transaksi iPaymu.",
+            data?.Message ?? "Gagal membuat transaksi iPaymu.",
           details: data,
         },
+        { status: response.status || 500 }
+      );
+    }
+
+    const transactionId = data?.Data?.TransactionId
+      ? String(data.Data.TransactionId)
+      : null;
+
+    if (!transactionId) {
+      console.error("IPAYMU TRANSACTION ID TIDAK DITEMUKAN:", data);
+
+      return NextResponse.json(
+        { error: "Transaction ID iPaymu tidak ditemukan." },
+        { status: 500 }
+      );
+    }
+
+    const { error: orderError } = await supabase
+      .from("orders")
+      .insert({
+        user_id: user.id,
+        package: packageId,
+        amount: selectedPackage.amount,
+        status: "pending",
+        transaction_id: transactionId,
+        payment_type: "qris",
+        transaction_time: new Date().toISOString(),
+      });
+
+    if (orderError) {
+      console.error("IPAYMU SAVE ORDER ERROR:", orderError);
+
+      return NextResponse.json(
         {
-          status:
-            response.status || 500,
-        }
+          error:
+            "Transaksi iPaymu berhasil dibuat, tetapi order gagal disimpan.",
+        },
+        { status: 500 }
       );
     }
 
@@ -196,28 +197,15 @@ export async function POST(request: Request) {
       success: true,
       referenceId,
       packageId,
-      amount:
-        selectedPackage.amount,
-      transactionId:
-        data?.Data?.TransactionId ??
-        null,
-      paymentNo:
-        data?.Data?.PaymentNo ??
-        null,
-      paymentName:
-        data?.Data?.PaymentName ??
-        null,
-      paymentUrl:
-        data?.Data?.Url ?? null,
-      expired:
-        data?.Data?.Expired ??
-        null,
+      amount: selectedPackage.amount,
+      transactionId,
+      paymentNo: data?.Data?.PaymentNo ?? null,
+      paymentName: data?.Data?.PaymentName ?? null,
+      paymentUrl: data?.Data?.Url ?? null,
+      expired: data?.Data?.Expired ?? null,
     });
   } catch (error) {
-    console.error(
-      "IPAYMU CHECKOUT ERROR:",
-      error
-    );
+    console.error("IPAYMU CHECKOUT ERROR:", error);
 
     return NextResponse.json(
       {
