@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 
 type AdPosition =
+  | "homepage_banner"
   | "homepage_main"
   | "homepage_bottom"
   | "dashboard_top"
@@ -254,6 +255,10 @@ export default function AdminAdCreateForm() {
             }
             className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 outline-none transition focus:border-emerald-500"
           >
+            <option value="homepage_banner">
+              Homepage Banner Utama
+            </option>
+
             <option value="homepage_main">
               Homepage Main
             </option>

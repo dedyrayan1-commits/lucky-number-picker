@@ -13,6 +13,25 @@ import { supabase } from "@/lib/supabase";
 export default async function Home() {
   const now = new Date().toISOString();
 
+  const { data: homepageBanner, error: homepageBannerError } =
+    await supabase
+      .from("ads")
+      .select("id, title, image_url, target_url")
+      .eq("position", "homepage_banner")
+      .eq("is_active", true)
+      .or(`start_at.is.null,start_at.lte.${now}`)
+      .or(`end_at.is.null,end_at.gte.${now}`)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+  if (homepageBannerError) {
+    console.error(
+      "HOMEPAGE BANNER ERROR:",
+      homepageBannerError
+    );
+  }
+
   const { data: homepageAd, error: adError } = await supabase
     .from("ads")
     .select("id, title, image_url, target_url")
@@ -54,14 +73,38 @@ export default async function Home() {
       <main className="min-h-screen bg-slate-950 text-white">
         <section className="mx-auto max-w-5xl px-6 pt-8 md:pt-10">
           <div className="overflow-hidden rounded-2xl border border-fuchsia-500/40 bg-black shadow-2xl shadow-fuchsia-950/30">
-            <Image
-              src="/lucky-number-picker-banner.png"
-              alt="Lucky Number Picker"
-              width={1036}
-              height={376}
-              priority
-              className="h-auto w-full"
-            />
+            {homepageBanner ? (
+              homepageBanner.target_url ? (
+                <a
+                  href={homepageBanner.target_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={homepageBanner.title}
+                  className="block"
+                >
+                  <img
+                    src={homepageBanner.image_url}
+                    alt={homepageBanner.title}
+                    className="h-auto w-full"
+                  />
+                </a>
+              ) : (
+                <img
+                  src={homepageBanner.image_url}
+                  alt={homepageBanner.title}
+                  className="h-auto w-full"
+                />
+              )
+            ) : (
+              <Image
+                src="/lucky-number-picker-banner.png"
+                alt="Lucky Number Picker"
+                width={1036}
+                height={376}
+                priority
+                className="h-auto w-full"
+              />
+            )}
           </div>
         </section>
 
