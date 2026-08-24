@@ -83,12 +83,27 @@ export default async function DashboardPage() {
     year: "numeric",
   }).format(new Date());
 
+  const storedMembership =
+    profile?.membership ?? "free";
+
+  const membershipExpiredAt =
+    profile?.membership_expired_at ?? null;
+
+  const isMembershipExpired =
+    storedMembership !== "free" &&
+    Boolean(membershipExpiredAt) &&
+    new Date(membershipExpiredAt).getTime() <= Date.now();
+
+  const membership = isMembershipExpired
+    ? "free"
+    : storedMembership;
+
   const canSeeRegular = canSeeRegularPrediction(
-    profile?.membership
+    membership
   );
 
   const canSeeToto = canSeeTotoPrediction(
-    profile?.membership
+    membership
   );
 
   const regularMarkets =
@@ -139,8 +154,6 @@ export default async function DashboardPage() {
       };
     }
   );
-
-  const membership = profile?.membership ?? "free";
 
   const membershipVisual =
     membership === "premium_regular"
@@ -356,8 +369,20 @@ export default async function DashboardPage() {
                     </span>
                   </div>
 
-                  <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm font-bold text-emerald-300 backdrop-blur-sm">
-                    ● Aktif
+                  <div
+                    className={`rounded-xl border px-4 py-3 text-sm font-bold backdrop-blur-sm ${
+                      isMembershipExpired
+                        ? "border-rose-400/20 bg-rose-400/10 text-rose-300"
+                        : membership === "free"
+                          ? "border-slate-500/30 bg-slate-500/10 text-slate-300"
+                          : "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
+                    }`}
+                  >
+                    {isMembershipExpired
+                      ? "● Expired"
+                      : membership === "free"
+                        ? "● Free"
+                        : "● Aktif"}
                   </div>
                 </div>
               </div>

@@ -8,7 +8,20 @@ import MemberManagementCard from "@/components/MemberManagementCard";
 import AdminAdCard from "@/components/AdminAdCard";
 import AdminAdCreateForm from "@/components/AdminAdCreateForm";
 import AdminTotoMacauDraws from "@/components/AdminTotoMacauDraws";
+import AdminManualPaymentCard from "@/components/AdminManualPaymentCard";
 import LogoutButton from "@/components/LogoutButton";
+
+type AdminManualPaymentRow = {
+  id: number;
+  user_id: string;
+  package: string;
+  amount: number;
+  status: string;
+  transaction_id: string | null;
+  payment_proof: string;
+  created_at: string;
+  member_name: string | null;
+};
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -58,6 +71,44 @@ export default async function AdminPage() {
     .from("ads")
     .select("*")
     .order("created_at");
+
+  const {
+    data: manualOrdersData,
+    error: manualOrdersError,
+  } = await supabase.rpc(
+    "get_admin_manual_payments"
+  );
+
+  const manualOrders =
+    (manualOrdersData ?? []) as AdminManualPaymentRow[];
+
+  if (manualOrdersError) {
+    console.error(
+      "GET ADMIN MANUAL PAYMENTS ERROR:",
+      manualOrdersError
+    );
+  }
+
+  const manualPayments =
+    await Promise.all(
+      (manualOrders ?? []).map(async (order) => {
+        const { data: signedProof } =
+          await supabase.storage
+            .from("payment-proofs")
+            .createSignedUrl(
+              order.payment_proof,
+              60 * 60
+            );
+
+        return {
+          ...order,
+          memberName:
+            order.member_name ?? "Member",
+          proofUrl:
+            signedProof?.signedUrl ?? "",
+        };
+      })
+    );
 
   return (
     <main className="min-h-screen bg-slate-950 p-10 text-white">
@@ -119,6 +170,43 @@ export default async function AdminPage() {
             />
           ))}
         </div>
+      </section>
+
+      <section className="mt-16">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold">
+            Manual Payment Verification
+          </h2>
+
+          <p className="mt-2 text-sm text-slate-400">
+            Periksa bukti transfer member sebelum menyetujui pembayaran dan mengaktifkan membership.
+          </p>
+        </div>
+
+        {manualPayments.length > 0 ? (
+          <div className="grid gap-6 lg:grid-cols-2">
+            {manualPayments.map((order) => (
+              <AdminManualPaymentCard
+                key={order.id}
+                orderId={order.id}
+                transactionId={
+                  order.transaction_id ?? `ORDER-${order.id}`
+                }
+                memberName={order.memberName}
+                memberEmail="Tidak tersedia di profile"
+                packageName={order.package}
+                amount={order.amount}
+                status={order.status}
+                paymentProof={order.payment_proof}
+                proofUrl={order.proofUrl}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 text-slate-400">
+            Belum ada pembayaran transfer bank yang menunggu verifikasi.
+          </div>
+        )}
       </section>
 
       <section className="mt-16">

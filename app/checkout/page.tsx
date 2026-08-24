@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import CheckoutButton from "@/components/CheckoutButton";
 import IPaymuCheckoutButton from "@/components/IPaymuCheckoutButton";
+import ManualPaymentButton from "@/components/ManualPaymentButton";
 import { createClient } from "@/lib/supabase/server";
 
 type CheckoutPageProps = {
@@ -149,6 +150,8 @@ export default async function CheckoutPage({
               Login diperlukan untuk melakukan test pembayaran iPaymu Sandbox.
             </div>
           )}
+
+          <ManualPaymentButton plan={selectedPlan} />
 
           <Link
             href="/premium"
