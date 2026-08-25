@@ -18,7 +18,7 @@ type AdminManualPaymentRow = {
   amount: number;
   status: string;
   transaction_id: string | null;
-  payment_proof: string;
+  payment_proof: string | null;
   created_at: string;
   member_name: string | null;
 };
@@ -92,20 +92,25 @@ export default async function AdminPage() {
   const manualPayments =
     await Promise.all(
       (manualOrders ?? []).map(async (order) => {
-        const { data: signedProof } =
-          await supabase.storage
-            .from("payment-proofs")
-            .createSignedUrl(
-              order.payment_proof,
-              60 * 60
-            );
+        let proofUrl = "";
+
+        if (order.payment_proof) {
+          const { data: signedProof } =
+            await supabase.storage
+              .from("payment-proofs")
+              .createSignedUrl(
+                order.payment_proof,
+                60 * 60
+              );
+
+          proofUrl = signedProof?.signedUrl ?? "";
+        }
 
         return {
           ...order,
           memberName:
             order.member_name ?? "Member",
-          proofUrl:
-            signedProof?.signedUrl ?? "",
+          proofUrl,
         };
       })
     );

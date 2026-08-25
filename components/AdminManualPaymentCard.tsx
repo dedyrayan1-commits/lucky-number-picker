@@ -10,7 +10,7 @@ type AdminManualPaymentCardProps = {
   packageName: string;
   amount: number;
   status: string;
-  paymentProof: string;
+  paymentProof: string | null;
   proofUrl: string;
 };
 
@@ -149,30 +149,56 @@ export default function AdminManualPaymentCard({
           Bukti Pembayaran
         </p>
 
-        <div className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-950">
-          <img
-            src={proofUrl}
-            alt={`Bukti pembayaran ${transactionId}`}
-            className="max-h-[520px] w-full object-contain"
-          />
-        </div>
+        {paymentProof && proofUrl ? (
+          <>
+            <div className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-950">
+              <img
+                src={proofUrl}
+                alt={`Bukti pembayaran ${transactionId}`}
+                className="max-h-[520px] w-full object-contain"
+              />
+            </div>
 
-        <p className="mt-2 break-all text-xs text-slate-500">
-          {paymentProof}
-        </p>
+            <p className="mt-2 break-all text-xs text-slate-500">
+              {paymentProof}
+            </p>
+          </>
+        ) : (
+          <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+            <p className="font-bold text-amber-300">
+              Menunggu bukti pembayaran
+            </p>
+
+            <p className="mt-2 text-sm leading-6 text-slate-300">
+              Member belum mengupload bukti pembayaran untuk order ini.
+            </p>
+          </div>
+        )}
       </div>
 
       {currentStatus === "pending" ? (
-        <button
-          type="button"
-          onClick={handleApprove}
-          disabled={loading}
-          className="mt-6 w-full rounded-xl bg-emerald-500 px-5 py-4 font-bold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {loading
-            ? "Memproses..."
-            : "Setujui Pembayaran & Aktifkan Membership"}
-        </button>
+        paymentProof && proofUrl ? (
+          <button
+            type="button"
+            onClick={handleApprove}
+            disabled={loading}
+            className="mt-6 w-full rounded-xl bg-emerald-500 px-5 py-4 font-bold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading
+              ? "Memproses..."
+              : "Setujui Pembayaran & Aktifkan Membership"}
+          </button>
+        ) : (
+          <div className="mt-6 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+            <p className="font-bold text-amber-300">
+              Belum siap diverifikasi
+            </p>
+
+            <p className="mt-2 text-sm leading-6 text-slate-300">
+              Tombol persetujuan akan tersedia setelah member mengupload bukti pembayaran.
+            </p>
+          </div>
+        )
       ) : (
         <div className="mt-6 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
           <p className="font-bold text-emerald-300">
